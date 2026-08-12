@@ -1,0 +1,8 @@
+# NOTE: Install torch & torchvision separately (see commands below)
+python-dotenv>=1.0.0
+qdrant-client>=1.6.0
+groq>=0.8.0
+sentence-transformers>=2.2.2
+numpy>=1.24
+transformers>=4.30.0
+httpx>=0.24.0
