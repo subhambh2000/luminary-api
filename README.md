@@ -49,7 +49,7 @@ semantic search with generative AI.
 - **Framework**: [FastAPI](https://fastapi.tiangolo.com/) - Modern, fast web framework for building APIs
 - **Vector Database**: [Qdrant](https://qdrant.tech/) - High-performance vector search database
 - **Embeddings**: [Qwen/Qwen3-Embedding-0.6B](https://huggingface.co/Qwen/Qwen3-Embedding-0.6B) - Lightweight, efficient embedding model
-- **LLM**: [Groq](https://groq.com/) - Fast inference for LLaMA 3.3 70B
+- **LLM**: [Groq](https://groq.com/) - Fast inference for openai/gpt-oss-120b
 - **NLP**: [Sentence-Transformers](https://www.sbert.net/) - For text embedding and semantic search
 
 ## Getting Started
@@ -89,7 +89,7 @@ HF_TOKEN=<your-huggingface-token>  # Optional, for private models
 VECTOR_SIZE=1024
 
 API_KEY=<your-groq-api-key>  # Required for LLM generation
-GENERATIVE_MODEL=llama-3.3-70b-versatile
+GENERATIVE_MODEL=openai/gpt-oss-120b
 MAX_TOKENS=1024
 TEMPERATURE=0.2
 
