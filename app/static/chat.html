@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luminary</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&display=swap"
+          rel="stylesheet">
+    <script src="/static/marked.min.js"></script>
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #0D0E14;
+            --surface: #13151E;
+            --input-bg: #1A1D28;
+            --border: #252836;
+            --gold: #C4A05A;
+            --gold-glow: rgba(196, 160, 90, 0.15);
+            --gold-line: rgb(205 168 90 / 0.57);
+            --text: #E2E5EF;
+            --text-muted: #9f9e9e;
+            --text-ghost: #9f9e9e;
+            --user-bg: #2c43c6;
+            --user-border: #28306A;
+            --error: #D95555;
+            --font: 'Inter', system-ui, sans-serif;
+            --serif: 'Instrument Serif', Georgia, serif;
+        }
+
+        html, body {
+            height: 100%;
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 14px;
+            line-height: 1.65;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── Layout ─────────────────────────────────────────── */
+        .app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* ── Header ─────────────────────────────────────────── */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            height: 54px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg);
+            flex-shrink: 0;
+            position: relative;
+            z-index: 10;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, var(--gold) 40%, transparent 100%);
+            opacity: 0.35;
+        }
+
+        .logo {
+            font-family: var(--serif);
+            font-size: 19px;
+            color: var(--text);
+            letter-spacing: 0.01em;
+        }
+
+        .logo-dot {
+            color: var(--gold);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .session-badge {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-family: 'Courier New', monospace;
+            letter-spacing: 0.06em;
+            background: var(--surface);
+            padding: 3px 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 5px 13px;
+            border-radius: 7px;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: var(--font);
+            transition: border-color 0.15s, color 0.15s;
+        }
+
+        .btn-ghost:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        /* ── Messages ────────────────────────────────────────── */
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 36px 0 12px;
+            scroll-behavior: smooth;
+        }
+
+        .messages::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        .messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .messages::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 2px;
+        }
+
+        /* Empty state */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            gap: 10px;
+            color: var(--text-muted);
+            padding: 48px;
+            text-align: center;
+        }
+
+        .empty-glyph {
+            font-size: 28px;
+            color: var(--gold-line);
+            margin-bottom: 6px;
+            font-family: var(--serif);
+            font-style: italic;
+        }
+
+        .empty-state h2 {
+            font-family: var(--serif);
+            font-size: 21px;
+            color: var(--text-ghost);
+            font-weight: 400;
+            font-style: italic;
+            letter-spacing: 0.01em;
+        }
+
+        .empty-state p {
+            font-size: 12.5px;
+            max-width: 300px;
+            line-height: 1.6;
+        }
+
+        /* Message row */
+        .msg-row {
+            max-width: 740px;
+            margin: 0 auto;
+            padding: 0 28px 26px;
+        }
+
+        /* User */
+        .msg-user {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .msg-user-bubble {
+            background: var(--user-bg);
+            border: 1px solid var(--user-border);
+            border-radius: 18px 18px 5px 18px;
+            padding: 11px 16px;
+            max-width: 72%;
+            font-size: 14px;
+            line-height: 1.55;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        /* Assistant */
+        .msg-assistant {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .msg-label {
+            font-size: 10.5px;
+            color: var(--gold);
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .msg-text {
+            font-size: 14px;
+            line-height: 1.72;
+            color: var(--text);
+            border-left: 2px solid var(--gold-line);
+            padding-left: 16px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            p { margin-bottom: 10px; }
+            p:last-child { margin-bottom: 0; }
+            ol, ul { padding-left: 20px; margin-bottom: 10px; }
+            li { margin-bottom: 4px; }
+            strong { color: #E8EAF0; font-weight: 600; }
+            h3 { font-size: 13px; font-weight: 600; margin: 14px 0 6px; color: #E8EAF0; }
+
+        }
+
+        /* Error variant */
+        .msg-error .msg-label {
+            color: var(--error);
+        }
+
+        .msg-error .msg-text {
+            border-left-color: rgba(217, 85, 85, 0.3);
+            color: #E88;
+        }
+
+        /* Streaming cursor */
+        .cursor {
+            display: inline-block;
+            width: 2px;
+            height: 13px;
+            background: var(--gold);
+            margin-left: 2px;
+            vertical-align: middle;
+            animation: blink 0.75s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0;
+            }
+        }
+
+        /* ── Input area ──────────────────────────────────────── */
+        .input-area {
+            padding: 14px 28px 22px;
+            background: var(--bg);
+            flex-shrink: 0;
+        }
+
+        .input-box {
+            max-width: 740px;
+            margin: 0 auto;
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 10px 12px;
+            transition: border-color 0.15s;
+        }
+
+        .input-box:focus-within {
+            border-color: rgba(196, 160, 90, 0.4);
+        }
+
+        textarea {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 14px;
+            line-height: 1.5;
+            resize: none;
+            min-height: 24px;
+            max-height: 160px;
+            overflow-y: auto;
+            padding: 2px 0;
+        }
+
+        textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .btn-send {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            border: none;
+            background: var(--gold);
+            color: var(--bg);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: background 0.15s, opacity 0.15s;
+        }
+
+        .btn-send:hover:not(:disabled) {
+            background: #D4AE68;
+        }
+
+        .btn-send:disabled {
+            background: var(--text-ghost);
+            cursor: not-allowed;
+        }
+
+        .btn-send svg {
+            width: 15px;
+            height: 15px;
+        }
+
+        .input-hint {
+            max-width: 740px;
+            margin: 8px auto 0;
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-ghost);
+        }
+
+    </style>
+</head>
+<body>
+<div class="app">
+
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">Luminary<span class="logo-dot">.</span></div>
+        <div class="header-right">
+            <span class="session-badge" id="session-badge">—</span>
+            <button class="btn-ghost" id="btn-new">New session</button>
+        </div>
+    </header>
+
+    <!-- Messages -->
+    <div class="messages" id="messages">
+        <div class="empty-state" id="empty-state">
+            <div class="empty-glyph">◈</div>
+            <h2>Ask your notes anything.</h2>
+            <p>Luminary searches your Obsidian knowledge base and answers from what you've written.</p>
+        </div>
+    </div>
+
+    <!-- Input -->
+    <div class="input-area">
+        <div class="input-box">
+            <textarea id="input" placeholder="Ask something about your notes…" rows="1"></textarea>
+            <button class="btn-send" id="btn-send" disabled aria-label="Send">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"/>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+            </button>
+        </div>
+        <div class="input-hint">Grounded in your personal notes · qwen/qwen3.6-27b via Groq</div>
+    </div>
+
+</div>
+<script>
+    marked.use({ gfm: true });
+    /* ── State ──────────────────────────────────────────────── */
+    let sessionId = uuid();
+    let isStreaming = false;
+
+    /* ── Refs ───────────────────────────────────────────────── */
+    const messagesEl = document.getElementById('messages');
+    const emptyEl = document.getElementById('empty-state');
+    const inputEl = document.getElementById('input');
+    const sendEl = document.getElementById('btn-send');
+    const badgeEl = document.getElementById('session-badge');
+    const newBtn = document.getElementById('btn-new');
+
+    /* ── Init ───────────────────────────────────────────────── */
+    refreshBadge();
+    inputEl.focus();
+
+    /* ── Helpers ────────────────────────────────────────────── */
+    function uuid() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+            const r = Math.random() * 16 | 0;
+            return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        }).slice(0, 13);
+    }
+
+    function refreshBadge() {
+        badgeEl.textContent = sessionId;
+    }
+
+    function escHtml(s) {
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function scrollBottom() {
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    /* ── Auto-resize textarea ───────────────────────────────── */
+    inputEl.addEventListener('input', () => {
+        inputEl.style.height = 'auto';
+        inputEl.style.height = Math.min(inputEl.scrollHeight, 160) + 'px';
+        sendEl.disabled = !inputEl.value.trim() || isStreaming;
+    });
+
+    inputEl.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            trySubmit();
+        }
+    });
+    sendEl.addEventListener('click', trySubmit);
+
+    /* ── New session ────────────────────────────────────────── */
+    newBtn.addEventListener('click', async () => {
+        if (isStreaming) return;
+        // Best-effort server delete
+        try {
+            await fetch(`/api/session/${sessionId}`, {method: 'DELETE'});
+        } catch (_) {
+        }
+
+        sessionId = uuid();
+        refreshBadge();
+
+        // Clear UI
+        messagesEl.innerHTML = '';
+        messagesEl.appendChild(emptyEl);
+        emptyEl.style.display = '';
+        inputEl.focus();
+    });
+
+    /* ── Render helpers ─────────────────────────────────────── */
+    function hideEmpty() {
+        emptyEl.style.display = 'none';
+    }
+
+    function addUserMsg(text) {
+        hideEmpty();
+        const row = document.createElement('div');
+        row.className = 'msg-row';
+        row.innerHTML = `<div class="msg-user"><div class="msg-user-bubble">${escHtml(text)}</div></div>`;
+        messagesEl.appendChild(row);
+        scrollBottom();
+    }
+
+    function addAssistantMsg() {
+        const id = 'a-' + Date.now();
+        const row = document.createElement('div');
+        row.className = 'msg-row';
+        row.innerHTML = `
+      <div class="msg-assistant">
+        <div class="msg-label">Luminary</div>
+        <div class="msg-text" id="${id}"><span class="cursor"></span></div>
+      </div>`;
+        messagesEl.appendChild(row);
+        scrollBottom();
+        return document.getElementById(id);
+    }
+
+    function appendToken(el, token) {
+        const cur = el.querySelector('.cursor');
+        if (cur) cur.remove();
+        el.appendChild(document.createTextNode(token));
+        const c = document.createElement('span');
+        c.className = 'cursor';
+        el.appendChild(c);
+        scrollBottom();
+    }
+
+    function preprocess(text) {
+        text = text.replace(/(:)\n\n/g, '$1\n')
+        text = text.replace(/(\*\* )\n\n/g, '$1\n')
+        return text
+    }
+
+    function finalise(el, text) {
+        el.innerHTML = text ? marked.parse(preprocess(text.replace('[DONE]', '').trim())) : '';
+    }
+
+    function addError(msg) {
+        const row = document.createElement('div');
+        row.className = 'msg-row';
+        row.innerHTML = `
+      <div class="msg-assistant msg-error">
+        <div class="msg-label">Error</div>
+        <div class="msg-text">${escHtml(msg)}</div>
+      </div>`;
+        messagesEl.appendChild(row);
+        scrollBottom();
+    }
+
+    /* ── Send ───────────────────────────────────────────────── */
+    function trySubmit() {
+        if (!inputEl.value.trim() || isStreaming) return;
+        sendMessage();
+    }
+
+    async function sendMessage() {
+        const query = inputEl.value.trim();
+        isStreaming = true;
+        sendEl.disabled = true;
+        inputEl.value = '';
+        inputEl.style.height = 'auto';
+
+        addUserMsg(query);
+        const textEl = addAssistantMsg();
+        let fulltext = ''
+
+        try {
+            const res = await fetch('/api/chat', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({question: query, session_id: sessionId}),
+            });
+
+            if (!res.ok) {
+                finalise(textEl);
+                let errMsg;
+                try {
+                    const j = await res.json();
+                    errMsg = j.detail || JSON.stringify(j);
+                } catch (_) {
+                    errMsg = await res.text();
+                }
+                addError(`${res.status} — ${errMsg}`);
+                return;
+            }
+
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder();
+            let buf = '';
+
+            outer: while (true) {
+                const {done, value} = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value, {stream: true});
+                buf += chunk
+                fulltext += chunk
+                const lines = buf.split('\n');
+                buf = lines.pop(); // keep incomplete line
+
+                for (const line of lines) {
+                    if (line.includes('[DONE]')) {
+                        const text = line.replace('[DONE]', '').trim();
+                        if (text) {
+                            fulltext += text;
+                            appendToken(textEl, text);
+                        }
+                        finalise(textEl, fulltext);
+                        break outer;
+                    }
+                    if (line.trim()) {
+                        appendToken(textEl, line);
+                    }
+                }
+            }
+
+            // Drain any leftover in buf
+            if (buf.trim()) {
+                if (buf.includes('[DONE]')) {
+                    const text = buf.replace('[DONE]', '').trim();
+                    if (text) {
+                        appendToken(textEl, text);
+                    }
+                } else {
+                    fulltext += buf.trim() + '\n';
+                    appendToken(textEl, buf.trim());
+                }
+                finalise(textEl, fulltext);
+            }
+        } catch (err) {
+            finalise(textEl,fulltext);
+            addError('Connection error — is the Luminary API running?');
+            console.error('[luminary]', err);
+        } finally {
+            isStreaming = false;
+            sendEl.disabled = !inputEl.value.trim();
+            inputEl.focus();
+        }
+    }
+</script>
+</body>
+</html>

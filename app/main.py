@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 
 import groq
 from starlette.responses import JSONResponse
@@ -10,6 +11,8 @@ from app.config import settings
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from qdrant_client import QdrantClient
 
 from app.core.embedder import load_model
@@ -43,9 +46,16 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
 app.include_router(router=ingest_router, prefix="/api")
 app.include_router(router=chat_router, prefix="/api")
 app.include_router(router=session_router, prefix="/api")
+
+
+@app.get("/")
+async def chat_ui():
+    return FileResponse("app/static/chat.html")
 
 
 @app.exception_handler(LuminaryException)

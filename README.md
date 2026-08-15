@@ -124,6 +124,9 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
+#### 6. Open the chat interface:
+Navigate to `http://localhost:8000/` in your browser to use the interactive chat UI.
+
 Server runs at: `http://localhost:8000`
 - API Docs: `http://localhost:8000/docs`
 - ReDoc: `http://localhost:8000/redoc`
@@ -146,7 +149,24 @@ Server runs at: `http://localhost:8000`
       ```
     - Response: Number of chunks ingested and duration in seconds
 
-### Chat
+### Chat UI
+The project includes a built-in web interface (`app/static/chat.html`) for interacting with the knowledge base. No additional setup is required beyond running the server.
+
+### Features
+- Real-time streaming responses with visual feedback
+- Session persistence (each conversation has a unique session ID)
+- Markdown rendering of responses using `marked.min.js`
+- Dark theme optimized for readability
+- Clear session history with "New session" button
+
+### Accessing the UI
+Open `http://localhost:8000/` in your browser after starting the server. The UI automatically generates a session ID for conversation tracking.
+
+### Dependencies
+- `marked.min.js` — Markdown parser library (included in `app/static/`)
+- Plain JavaScript (no build tool required)
+
+### Chat Endpoint
 - **POST** `/api/chat`
     - Stream a response augmented with relevant context from your knowledge base
     - Request:
@@ -202,7 +222,10 @@ luminary-api/
 │   │   ├── retriever.py     # Vector search
 │   │   └── generator.py     # LLM response generation
 │   ├── services/            # Business logic
-│   └── utils/               # Utilities & errors
+│   ├── utils/               # Utilities & errors
+│   └── static/              # Static files (UI & libraries)
+│       ├── chat.html        # Interactive chat interface
+│       └── marked.min.js    # Markdown parser library
 ├── data/
 │   └── notes/               # Your knowledge base documents
 ├── docker-compose.yml       # Qdrant setup
